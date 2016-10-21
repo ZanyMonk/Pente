@@ -11,6 +11,8 @@ public class Board extends JPanel {
 	private int 	cellSize = 30;
 	private int		headerSize = 25;
 	
+	public int		player = 0; // White begins
+	
 	Board() {
 		super();
 
@@ -27,6 +29,14 @@ public class Board extends JPanel {
 				add(b);
 			}
 		}
+	}
+	
+	public int getPlayer() {
+		return this.player;
+	}
+	
+	public void nextTurn() {
+		this.player = (this.player+1)%2;
 	}
 
 	@Override

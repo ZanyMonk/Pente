@@ -18,7 +18,7 @@ public class Cell extends JButton {
 	private int size = 29;
 	private int state = 0; // 0: None; 1: White; 2: Black
 	private boolean hover = false;
-	private boolean played = false;
+	private boolean played = false; // First, the pawn remains to be played
 	
 	Cell() {
 		super("");
@@ -37,7 +37,9 @@ public class Cell extends JButton {
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
-				c.setState(1);
+				Board b = (Board)c.getParent();
+				c.setState(b.player+1);
+				b.nextTurn();
 				c.play();
 			}
 		});
@@ -47,6 +49,7 @@ public class Cell extends JButton {
 		this();
 		this.x = x;
 		this.y = y;
+		// Set position on the board
 		setBounds(this.x-size/2, this.y-size/2, this.size, this.size);
 	}
 	
