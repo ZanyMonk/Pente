@@ -3,18 +3,31 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.FontMetrics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import javax.swing.JPanel;
 
 public class Board extends JPanel {
+	private BufferedImage	background;
 	private int 	margin = 25;
 	private int 	cellSize = 30;
 	private int		headerSize = 25;
+	private int		player = 0; // White begins
+	private boolean	playing = false;
 	
-	public int		player = 0; // White begins
 	
 	Board() {
 		super();
+		try {
+			background = ImageIO.read(new File("test.jpg"));
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Couldn't load background image.");
+		}
 
 		setLayout(null);
 
@@ -22,6 +35,7 @@ public class Board extends JPanel {
 	}
 
 	private void initBoard() {
+		removeAll();
 		Cell b;
 		for (int y = 19; y > 0; y--) {
 			for (int x = 19; x > 0; x--) {
@@ -29,6 +43,7 @@ public class Board extends JPanel {
 				add(b);
 			}
 		}
+		repaint();
 	}
 	
 	public int getPlayer() {
@@ -38,15 +53,23 @@ public class Board extends JPanel {
 	public void nextTurn() {
 		this.player = (this.player+1)%2;
 	}
+	
+	public boolean isPlaying() {
+		return this.playing;
+	}
+	
+	public void newGame() {
+		this.playing = true;
+		this.initBoard();
+	}
 
 	@Override
 	public void paintComponent(Graphics G) {
 		super.paintComponent(G);
 		Graphics2D g = (Graphics2D)G;
-		g.setColor(Color.black);
-		g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		g.drawImage(this.background, 0, 0, this);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setColor(Color.white);
+		g.setColor(new Color(235, 235, 235));
 		
 		// Draw grid
 		FontMetrics fm = g.getFontMetrics();

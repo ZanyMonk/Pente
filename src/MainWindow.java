@@ -19,7 +19,7 @@ public class MainWindow extends JFrame {
 	MainWindow() {
 		super("Pente");
 
-		setSize(new Dimension(633, 656));
+		setSize(new Dimension(633, 676));
 		setResizable(false);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,7 +27,7 @@ public class MainWindow extends JFrame {
 		menuBar = new JMenuBar();
 		board = new Board();
 		
-		MenuListener menuListener = new MenuListener();
+		MenuListener menuListener = new MenuListener(board);
 		
 		JMenu fileMenu = new JMenu("File");
 		JMenu helpMenu = new JMenu("?");

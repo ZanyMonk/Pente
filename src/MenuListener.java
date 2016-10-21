@@ -9,6 +9,12 @@ import javax.swing.JFrame;
 import java.awt.event.ItemEvent;
 
 public class MenuListener implements ActionListener, ItemListener {
+	Board	board;
+	
+	MenuListener(Board board) {
+		this.board = board;
+	}
+	
 	public void actionPerformed(ActionEvent e) {
 		switch(e.getActionCommand()) {
 			case "Quit":
@@ -19,7 +25,7 @@ public class MenuListener implements ActionListener, ItemListener {
 				System.out.println("About");
 				break;
 			case "New":
-				System.out.println("New");
+				this.board.newGame();
 				break;
 		}
 	}

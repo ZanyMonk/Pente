@@ -16,7 +16,7 @@ import javax.swing.JButton;
 public class Cell extends JButton {
 	private int x, y;
 	private int size = 29;
-	private int state = 0; // 0: None; 1: White; 2: Black
+	private int state = 0; // 0: White; 1: Black
 	private boolean hover = false;
 	private boolean played = false; // First, the pawn remains to be played
 	
@@ -29,8 +29,11 @@ public class Cell extends JButton {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				Cell c = (Cell)e.getSource();
-				c.toggleHover();					
-				c.getParent().repaint();
+				Board b = (Board)c.getParent();
+				if(b.isPlaying()) {
+					c.toggleHover();
+					c.getParent().repaint();
+				}
 			}
 		});
 		
@@ -38,9 +41,12 @@ public class Cell extends JButton {
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
 				Board b = (Board)c.getParent();
-				c.setState(b.player+1);
-				b.nextTurn();
-				c.play();
+				if(b.isPlaying()) {
+					c.setState(b.getPlayer());
+					b.nextTurn();
+					c.play();
+					c.getParent().repaint();
+				}
 			}
 		});
 	}
@@ -58,7 +64,7 @@ public class Cell extends JButton {
 	}
 	
 	public void setState(int newState) {
-		this.state = (newState >= 0 && newState <= 2 ? newState : 0);
+		this.state = (newState >= 0 && newState <= 1 ? newState : 0);
 	}
 	
 	public boolean isHover() {
@@ -78,8 +84,16 @@ public class Cell extends JButton {
 		Graphics2D gr = (Graphics2D)G;
 		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		if(this.state != 0 || this.hover) {
-			int c = (this.state == 1 ? 200 : 50);
+		if(this.hover || this.played) {
+			int c;
+			if(
+					this.state == 0 && this.played
+				|| 	!this.played && ((Board)getParent()).getPlayer() == 0
+			) {
+				c = 200;
+			} else {
+				c = 20;
+			}
 			int r = c;
 			int g = c;
 			int b = c;
