@@ -14,11 +14,13 @@ import javax.swing.event.ChangeListener;
 import javax.swing.JButton;
 
 public class Cell extends JButton {
-	private int x, y;
+	private int x, y;		// Position on the board in pixels
 	private int size = 29;
-	private int state = 0; // 0: White; 1: Black
+	private int state = 0;	// 0: White; 1: Black
 	private boolean hover = false;
 	private boolean played = false; // First, the pawn remains to be played
+	
+	public int iX, iY;		// Position on the board, included in [0,18]
 	
 	Cell() {
 		super("");
@@ -41,7 +43,7 @@ public class Cell extends JButton {
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
 				Board b = (Board)c.getParent();
-				if(b.isPlaying()) {
+				if(b.isPlaying() && b.checkMove(c)) {
 					c.setState(b.getPlayer());
 					b.nextTurn();
 					c.play();
@@ -51,10 +53,13 @@ public class Cell extends JButton {
 		});
 	}
 	
-	Cell(int x, int y) {
+	Cell(int x, int y, int iX, int iY) {
 		this();
 		this.x = x;
 		this.y = y;
+		this.iX = iX-1;
+		this.iY = iY-1;
+		
 		// Set position on the board
 		setBounds(this.x-size/2, this.y-size/2, this.size, this.size);
 	}
@@ -75,8 +80,16 @@ public class Cell extends JButton {
 		this.hover = !this.hover;
 	}
 	
+	public boolean isPlayed() {
+		return this.played;
+	}
+	
 	public void play() {
 		this.played = true;
+	}
+	
+	public int getColor() { // -1 = not played, 0 = white, 1 = black
+		return !this.isPlayed() ? -1 : this.state;
 	}
 
 	@Override

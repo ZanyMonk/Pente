@@ -8,8 +8,8 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-
 import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 
 public class Board extends JPanel {
 	private BufferedImage	background;
@@ -22,8 +22,9 @@ public class Board extends JPanel {
 	
 	Board() {
 		super();
+		
 		try {
-			background = ImageIO.read(new File("test.jpg"));
+			background = ImageIO.read(new File("background.jpg"));
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Couldn't load background image.");
@@ -39,11 +40,25 @@ public class Board extends JPanel {
 		Cell b;
 		for (int y = 19; y > 0; y--) {
 			for (int x = 19; x > 0; x--) {
-				b = new Cell(x*this.cellSize+20, y*this.cellSize+20);
+				b = new Cell(x*this.cellSize+20, y*this.cellSize+20, x, y);
 				add(b);
 			}
 		}
 		repaint();
+	}
+	
+	private Cell getCellAt(int x, int y) {
+		return (Cell)this.getComponent(19*19-(19*(y < 0 ? 0 : y)+x)-1);
+	}
+	
+	private void win() {
+		JOptionPane.showMessageDialog(
+			this,
+			(this.player == 0 ? "White" : "Black")+" wins the game !",
+			"Victory !",
+			JOptionPane.INFORMATION_MESSAGE
+		);
+		this.playing = false;
 	}
 	
 	public int getPlayer() {
@@ -54,13 +69,114 @@ public class Board extends JPanel {
 		this.player = (this.player+1)%2;
 	}
 	
+	// Indexes
+	//			0
+	//		7		1
+	//	6				2
+	//		5		3
+	//			4
+	// Value
+	// -1 = no alignment
+	// 0 = five aligned
+	// 1 = two enemies aligned and surrounded
+	public int[] checkAlignement(Cell source, int player) {
+		int[] res = { -1, -1, -1, -1, -1, -1, -1, -1 };
+		
+		int v = 0, h = 1;
+		
+		for(int i = 0; i < 4; i++) { // Test N, NE, E, SE
+			if(!(v == 1 && h == 1)) {
+				int n = 5;
+				int x = 0;
+				int y = 0;
+				int winCount = 1;
+				
+				// We go to the farthest accessible intersection from the source toward a direction between N and SE
+				// clockwise.
+				// For each direction, we go back to our origin cell (source) and continue further until we reach the
+				// fourth cell behind the origin or a side of the board.
+				while(n > -4) {
+					n--;
+					x = source.iX+(h-1)*n;
+					y = source.iY+(v-1)*n;
+					
+					if(x > 18 || y > 18) {	// Intersection is not accessible
+						continue;
+					} else if(x < 0) {		// Intersection is out of the board
+						break;
+					} else {				// Intersection is valid
+						Cell cell = this.getCellAt(x, y);
+						if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
+							winCount++;
+						} else {
+							winCount = 1;
+						}
+						
+						if(winCount >= 5) {	// Yeah ... you win !
+							res[i] = 0;
+						}
+					}
+					
+				}
+			}
+
+			if(i%3 == 0) { // Rotate N > NE > E > SE
+				h = (h+1)%3;
+			} else {
+				v = (v+1)%3;
+			}
+		}
+		
+		
+		
+		// DEV__Check if two enemy pawns are surrounded by two of our ones
+		
+		return res;
+	}
+	
+	public boolean checkMove(Cell cell) {
+		boolean win = false;
+		int[] r = this.checkAlignement(cell, this.player);
+		
+		for(int i = r.length-1; i >= 0; i--) {
+			if(r[i] == 0) {
+				win = true;
+			}
+		}
+		
+		if(win) {
+			this.win();
+		}
+		
+		return true;
+	}
+	
 	public boolean isPlaying() {
 		return this.playing;
 	}
 	
+	public boolean confirmNewGame() {
+		return JOptionPane.showConfirmDialog(
+			this,
+			"Your current game won't be saved. Are you sure to start a new game ?",
+            "New game", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        ) == 0;
+	}
+	
 	public void newGame() {
-		this.playing = true;
-		this.initBoard();
+		boolean confirm = true;
+		
+		if(this.playing) {
+			confirm = this.confirmNewGame();
+		}
+		
+		if(confirm) {
+			this.playing = true;
+			this.initBoard();
+			// DEV__Place first pawn at the center of the board
+		}
 	}
 
 	@Override
