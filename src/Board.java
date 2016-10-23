@@ -52,21 +52,28 @@ public class Board extends JPanel {
 	}
 	
 	private void win() {
-		JOptionPane.showMessageDialog(
-			this,
-			(this.player == 0 ? "White" : "Black")+" wins the game !",
-			"Victory !",
-			JOptionPane.INFORMATION_MESSAGE
-		);
 		this.playing = false;
+		if(JOptionPane.showConfirmDialog(
+			this,
+			(this.player == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
+			"Victory !",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.INFORMATION_MESSAGE
+		) == 0) {
+			this.nextTurn();
+			this.newGame();
+			this.nextTurn();
+		}
 	}
 	
 	public int getPlayer() {
 		return this.player;
 	}
 	
-	public void nextTurn() {
+	public int nextTurn() {
 		this.player = (this.player+1)%2;
+		
+		return this.player;
 	}
 	
 	// Indexes
@@ -159,7 +166,7 @@ public class Board extends JPanel {
 		return JOptionPane.showConfirmDialog(
 			this,
 			"Your current game won't be saved. Are you sure to start a new game ?",
-            "New game", 
+            "New game",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.QUESTION_MESSAGE
         ) == 0;
@@ -175,7 +182,10 @@ public class Board extends JPanel {
 		if(confirm) {
 			this.playing = true;
 			this.initBoard();
-			// DEV__Place first pawn at the center of the board
+			Cell first = this.getCellAt(9, 9);
+			first.setColor(this.player);
+			first.play();
+			this.nextTurn();
 		}
 	}
 

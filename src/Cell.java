@@ -43,11 +43,10 @@ public class Cell extends JButton {
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
 				Board b = (Board)c.getParent();
-				if(b.isPlaying() && b.checkMove(c)) {
+				if(!c.isPlayed() && b.isPlaying() && b.checkMove(c)) {
 					c.setState(b.getPlayer());
 					b.nextTurn();
 					c.play();
-					c.getParent().repaint();
 				}
 			}
 		});
@@ -90,6 +89,12 @@ public class Cell extends JButton {
 	
 	public int getColor() { // -1 = not played, 0 = white, 1 = black
 		return !this.isPlayed() ? -1 : this.state;
+	}
+	
+	public void setColor(int c) {
+		if(c == 0 || c == 1) {
+			this.state = c;
+		}
 	}
 
 	@Override
