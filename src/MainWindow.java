@@ -45,8 +45,8 @@ public class MainWindow extends JFrame {
 		aboutMenuItem.setActionCommand("About");
 		aboutMenuItem.addActionListener(menuListener);
 		
-		fileMenu.add(quitMenuItem);
 		fileMenu.add(newMenuItem);
+		fileMenu.add(quitMenuItem);
 		
 		helpMenu.add(aboutMenuItem);
 		
