@@ -24,7 +24,7 @@ public class Board extends JPanel {
 		super();
 		
 		try {
-			background = ImageIO.read(new File("background.jpg"));
+			background = ImageIO.read(Board.class.getResource("/background.jpg"));
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Couldn't load background image.");
