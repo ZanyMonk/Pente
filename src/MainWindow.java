@@ -15,6 +15,8 @@ import javax.swing.JFrame;
 public class MainWindow extends JFrame {
 	private JMenuBar menuBar;
 	private Board board;
+	
+	public MenuListener menuListener;
 
 	MainWindow() {
 		super("Pente");
@@ -25,27 +27,33 @@ public class MainWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		menuBar = new JMenuBar();
-		board = new Board();
+		board = new Board(this);
 		
-		MenuListener menuListener = new MenuListener(board);
+		this.menuListener = new MenuListener(board);
 		
 		JMenu fileMenu = new JMenu("File");
 		JMenu helpMenu = new JMenu("?");
 
 		JMenuItem quitMenuItem = new JMenuItem("Quit");
 		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, ActionEvent.CTRL_MASK));
-		quitMenuItem.addActionListener(menuListener);
-		
+		quitMenuItem.addActionListener(this.menuListener);
+
 		JMenuItem newMenuItem = new JMenuItem("Start a new game");
 		newMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
 		newMenuItem.setActionCommand("New");
-		newMenuItem.addActionListener(menuListener);
+		newMenuItem.addActionListener(this.menuListener);
+		
+		JMenuItem hostMenuItem = new JMenuItem("Host a game");
+		hostMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+		hostMenuItem.setActionCommand("Host");
+		hostMenuItem.addActionListener(this.menuListener);
 		
 		JMenuItem aboutMenuItem = new JMenuItem("About this program");
 		aboutMenuItem.setActionCommand("About");
-		aboutMenuItem.addActionListener(menuListener);
+		aboutMenuItem.addActionListener(this.menuListener);
 		
 		fileMenu.add(newMenuItem);
+		fileMenu.add(hostMenuItem);
 		fileMenu.add(quitMenuItem);
 		
 		helpMenu.add(aboutMenuItem);

@@ -1,9 +1,13 @@
+import java.util.HashMap;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.FontMetrics;
 import java.awt.image.BufferedImage;
+import java.awt.event.ActionEvent;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -13,11 +17,16 @@ import javax.swing.JOptionPane;
 
 public class Board extends JPanel {
 	private BufferedImage	background;
-	private int 	margin = 25;
-	private int 	cellSize = 30;
-	private int		headerSize = 25;
-	private int		player = 0; // White begins
-	private boolean	playing = false;
+	private int 		margin = 25;
+	private int 		cellSize = 30;
+	private int			headerSize = 25;
+	private int			player = 0; // White begins
+	private boolean		playing = false;
+	private MainWindow	parent = null;
+	private Server		server;
+	private Client		client;
+	
+	public String		opponentMove = "";
 	
 	
 	Board() {
@@ -33,6 +42,12 @@ public class Board extends JPanel {
 		setLayout(null);
 
 		initBoard();
+	}
+	
+	Board(MainWindow parent) {
+		this();
+		
+		this.parent = parent;
 	}
 
 	private void initBoard() {
@@ -187,6 +202,27 @@ public class Board extends JPanel {
 			first.play();
 			this.nextTurn();
 		}
+	}
+	
+	public void host(String rawPort) {
+		int port = Server.defaultPort;
+		try {
+			port = Integer.parseInt(rawPort);
+		} catch(NumberFormatException err) {
+			System.err.println("This is no valid port.");
+		}
+		this.server = new Server(port, this);
+		this.server.start();
+		this.newGame();
+	}
+	
+	public boolean makeMove(HashMap<String, String> cmd) {
+		for(String c : cmd.keySet()) {
+			this.opponentMove = cmd.get(c);
+			System.out.println(c);
+			this.parent.menuListener.actionPerformed(new ActionEvent(this, 1, c));
+		}
+		return true;
 	}
 
 	@Override

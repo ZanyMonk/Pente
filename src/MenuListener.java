@@ -33,6 +33,25 @@ public class MenuListener implements ActionListener, ItemListener {
 			case "New":
 				this.board.newGame();
 				break;
+			case "Host":
+				this.board.host((String)JOptionPane.showInputDialog(
+					frame,
+					"Port",
+					"Host settings",
+					JOptionPane.INFORMATION_MESSAGE,
+					null,
+					null,
+					"1337"
+				));
+				break;
+			case "HELLO":
+				System.out.println("Opponent connected");
+				break;
+			case "MOVE":
+				System.out.println("Opponent puts a pawn at "+this.board.opponentMove);
+				break;
+			default:
+				break;
 		}
 	}
 	
