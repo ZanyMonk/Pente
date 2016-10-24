@@ -1,15 +1,12 @@
 import java.awt.event.ActionListener;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import java.awt.event.ItemEvent;
-
-public class MenuListener implements ActionListener, ItemListener {
+public class MenuListener implements ActionListener {
 	Board	board;
 	
 	MenuListener(Board board) {
@@ -34,7 +31,7 @@ public class MenuListener implements ActionListener, ItemListener {
 				this.board.newGame();
 				break;
 			case "Host":
-				this.board.host((String)JOptionPane.showInputDialog(
+				String port = (String)JOptionPane.showInputDialog(
 					frame,
 					"Port",
 					"Host settings",
@@ -42,10 +39,17 @@ public class MenuListener implements ActionListener, ItemListener {
 					null,
 					null,
 					"1337"
-				));
+				);
+				
+				if(port != null) {
+					this.board.host(port);
+				}
 				break;
 			case "HELLO":
 				System.out.println("Opponent connected");
+				break;
+			case "QUIT":
+				System.out.println("Opponent just quitted");
 				break;
 			case "MOVE":
 				System.out.println("Opponent puts a pawn at "+this.board.opponentMove);
@@ -53,9 +57,5 @@ public class MenuListener implements ActionListener, ItemListener {
 			default:
 				break;
 		}
-	}
-	
-	public void itemStateChanged(ItemEvent e) {
-		
 	}
 }

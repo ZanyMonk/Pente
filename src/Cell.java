@@ -13,6 +13,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.JButton;
 
+@SuppressWarnings("serial")
 public class Cell extends JButton {
 	private int x, y;		// Position on the board in pixels
 	private int size = 29;

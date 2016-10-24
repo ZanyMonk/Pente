@@ -1,4 +1,5 @@
 public class Pente {
+	@SuppressWarnings("unused")
 	private MainWindow W;
 
 	Pente() {
@@ -8,6 +9,7 @@ public class Pente {
 	}
 
 	public static void main(String [] args) {
+		@SuppressWarnings("unused")
 		Pente game = new Pente();
 	}
 
