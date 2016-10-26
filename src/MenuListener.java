@@ -30,6 +30,10 @@ public class MenuListener implements ActionListener {
 			case "New":
 				this.board.newGame();
 				break;
+			case "Join":
+				JoinForm form = new JoinForm(this.board);
+				form.showWindow();
+				break;
 			case "Host":
 				String port = (String)JOptionPane.showInputDialog(
 					frame,

@@ -33,16 +33,41 @@ public class MainWindow extends JFrame {
 		JMenu helpMenu = new JMenu("?");
 
 		JMenuItem quitMenuItem = new JMenuItem("Quit");
-		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, ActionEvent.CTRL_MASK));
+		quitMenuItem.setAccelerator(
+			KeyStroke.getKeyStroke(
+				KeyEvent.VK_Q,
+				ActionEvent.CTRL_MASK
+			)
+		);
 		quitMenuItem.addActionListener(this.menuListener);
 
 		JMenuItem newMenuItem = new JMenuItem("Start a new game");
-		newMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
+		newMenuItem.setAccelerator(
+			KeyStroke.getKeyStroke(
+				KeyEvent.VK_N,
+				ActionEvent.CTRL_MASK
+			)
+		);
 		newMenuItem.setActionCommand("New");
 		newMenuItem.addActionListener(this.menuListener);
 		
+		JMenuItem joinMenuItem = new JMenuItem("Join a game");
+		joinMenuItem.setAccelerator(
+			KeyStroke.getKeyStroke(
+				KeyEvent.VK_J,
+				ActionEvent.CTRL_MASK
+			)
+		);
+		joinMenuItem.setActionCommand("Join");
+		joinMenuItem.addActionListener(this.menuListener);
+		
 		JMenuItem hostMenuItem = new JMenuItem("Host a game");
-		hostMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+		hostMenuItem.setAccelerator(
+			KeyStroke.getKeyStroke(
+				KeyEvent.VK_H,
+				ActionEvent.CTRL_MASK
+			)
+		);
 		hostMenuItem.setActionCommand("Host");
 		hostMenuItem.addActionListener(this.menuListener);
 		
@@ -51,6 +76,7 @@ public class MainWindow extends JFrame {
 		aboutMenuItem.addActionListener(this.menuListener);
 		
 		fileMenu.add(newMenuItem);
+		fileMenu.add(joinMenuItem);
 		fileMenu.add(hostMenuItem);
 		fileMenu.add(quitMenuItem);
 		

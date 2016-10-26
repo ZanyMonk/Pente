@@ -33,25 +33,25 @@ public class Cell extends JButton {
 			public void stateChanged(ChangeEvent e) {
 				Cell c = (Cell)e.getSource();
 				Board b = (Board)c.getParent();
-                if(b.isPlaying() && !c.isPlayed() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
+				if(b.isPlaying() && !c.isPlayed() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
 					b.blurCells();
 					c.toggleHover();
-                    c.getParent().repaint();
-                }
+					c.getParent().repaint();
+				}
 			}
 		});
-		
+
 		addMouseListener(new MouseAdapter() {
-            @Override
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
 				Board b = (Board)c.getParent();
 				if(
-                        !c.isPlayed()
-                    &&  b.isPlaying()
-                    &&  b.checkMove(c)
-                    && (!b.isPlayingOnline() || b.isLocalPlayerTurn())
-                ) {
+						!c.isPlayed()
+					&&  b.isPlaying()
+					&&  b.checkMove(c)
+					&& (!b.isPlayingOnline() || b.isLocalPlayerTurn())
+				) {
 					c.setState(b.getPlayer());
 					c.play();
 					c.blur();
@@ -91,10 +91,10 @@ public class Cell extends JButton {
 	public void hover() {
 		this.hover = true;
 	}
-    
-    public void blur() {
-        this.hover = false;
-    }
+
+	public void blur() {
+		this.hover = false;
+	}
 	
 	public boolean isPlayed() {
 		return this.played;

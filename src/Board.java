@@ -21,12 +21,12 @@ public class Board extends JPanel {
 	private int 		cellSize = 30;
 	private int			headerSize = 25;
 	private int			playerColor = 0;
-    private int         currentPlayer = 0; // White begins
+	private int			currentPlayer = 0; // White begins
 	private boolean		playing = false;
 	private MainWindow	parent = null;
 	private Server		server;
 	private Client		client;
-    private Opponent    opponent = new Opponent();
+	private Opponent	opponent = new Opponent();
 	
 	Board() {
 		super();
@@ -70,24 +70,26 @@ public class Board extends JPanel {
 			this,
 			(this.currentPlayer == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
 			"Victory !",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.INFORMATION_MESSAGE
+			JOptionPane.YES_NO_OPTION,
+			JOptionPane.INFORMATION_MESSAGE
 		) == 0) {
 			this.nextTurn();
 			this.newGame();
 			this.nextTurn();
 		}
 	}
-    
-    public void blurCells() {
-        Cell c;
-		for (int y = 18; y >= 0; y--) {
-			for (int x = 18; x >= 0; x--) {
-                c = this.getCellAt(x, y);
-                c.blur();
-            }
-        }
-    }
+
+	public void blurCells() {
+		if(this.isPlaying()) {
+			Cell c;
+			for (int y = 18; y >= 0; y--) {
+				for (int x = 18; x >= 0; x--) {
+					c = this.getCellAt(x, y);
+					c.blur();
+				}
+			}
+		}
+	}
 	
 	public int getPlayer() {
 		return this.currentPlayer;
@@ -105,8 +107,8 @@ public class Board extends JPanel {
 	//			C		2
 	//				3
 	//
-    // 0 = North, 1 = North-East etc ...
-    //
+	// 0 = North, 1 = North-East etc ...
+	//
 	// Value
 	// -1 = no alignment
 	// 0 = five aligned
@@ -134,22 +136,22 @@ public class Board extends JPanel {
 					if(x > 18 || y > 18) {	// Intersection is not accessible
 						continue;
 					}
-                    if(x < 0) {		// Intersection is out of the board
+					if(x < 0) {		// Intersection is out of the board
 						break;
 					}
-                    // Intersection is valid
-                    Cell cell = this.getCellAt(x, y);
-                    if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
-                        winCount++;
-                    } else {
-                        winCount = 1;
-                    }
+					// Intersection is valid
+					Cell cell = this.getCellAt(x, y);
+					if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
+						winCount++;
+					} else {
+						winCount = 1;
+					}
 
-                    // DEV__Check if two enemy pawns are surrounded by two of our ones
-                    
-                    if(winCount >= 5) {	// Yeah ... you win !
-                        res[i] = 0;
-                    }
+					// DEV__Check if two enemy pawns are surrounded by two of our ones
+
+					if(winCount >= 5) {	// Yeah ... you win !
+						res[i] = 0;
+					}
 				}
 			}
 
@@ -164,10 +166,10 @@ public class Board extends JPanel {
 	}
 	
 	public boolean checkMove(Cell cell) {
-        if(cell.isPlayed()) {
-            return false;
-        }
-        
+		if(cell.isPlayed()) {
+			return false;
+		}
+
 		boolean win = false;
 		int[] r = this.checkAlignement(cell, this.currentPlayer);
 		
@@ -192,10 +194,10 @@ public class Board extends JPanel {
 		return JOptionPane.showConfirmDialog(
 			this,
 			"Your current game won't be saved. Are you sure to start a new game ?",
-            "New game",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        ) == 0;
+			"New game",
+			JOptionPane.YES_NO_OPTION,
+			JOptionPane.QUESTION_MESSAGE
+		) == 0;
 	}
 	
 	public void newGame() {
@@ -215,6 +217,10 @@ public class Board extends JPanel {
 		}
 	}
 	
+	public void join(String host, int port) {
+		this.client = new Client(host, port);
+	}
+	
 	public void host(String rawPort) {
 		int port = Server.defaultPort;
 		try {
@@ -224,35 +230,35 @@ public class Board extends JPanel {
 		}
 		this.server = new Server(port, this);
 		this.server.start();
-		this.newGame();
 	}
 	
 	public boolean makeMove(HashMap<String, String> cmd) {
-		
-				System.out.println(this.getCellAt(0, 0).isHover());
+		System.out.println(this.getCellAt(0, 0).isHover());
 		for(String c : cmd.keySet()) {  // Java8 needed
 			String data = cmd.get(c);
-            switch(c) {
-                case "HELLO":
-                    this.opponent.login(data);
-                    System.out.println("Opponent named \""+data+"\" has connected");
-                    break;
-                case "QUIT":
-                    if(this.opponent.isConnected()) {
-                        this.opponent.logout();
-                        System.out.println("Opponent just quitted");
-                    }
-                    break;
-                case "MOVE":
-                    if(this.opponent.isConnected()) {
-                        int x, y;
-                        String[] coords = data.split(",");
-                        x = Integer.parseInt(coords[0]);
-                        y = Integer.parseInt(coords[1]);
-                        this.playOpponentMove(x, y);
-                    }
-                    break;
-            }
+			switch(c) {
+				case "HELLO":
+					this.opponent.login(data);
+					this.newGame();
+					System.out.println("Opponent named \""+data+"\" has connected");
+					break;
+				case "QUIT":
+					if(this.opponent.isConnected()) {
+						this.opponent.logout();
+						System.out.println("Opponent just quitted");
+						this.server.closeSocket();
+					}
+					break;
+				case "MOVE":
+					if(this.opponent.isConnected()) {
+						int x, y;
+						String[] coords = data.split(",");
+						x = Integer.parseInt(coords[0]);
+						y = Integer.parseInt(coords[1]);
+						this.playOpponentMove(x, y);
+					}
+					break;
+			}
 		}
 		return true;
 	}
@@ -263,7 +269,7 @@ public class Board extends JPanel {
 			System.out.println("("+x+","+y+")");
 			cell.setColor(this.currentPlayer);
 			cell.play();
-            this.nextTurn();
+			this.nextTurn();
 			this.repaint();
 			return true;
 		} else {
@@ -275,10 +281,10 @@ public class Board extends JPanel {
 	public boolean isPlayingOnline() {
 		return this.server != null || this.client != null;
 	}
-    
-    public boolean isLocalPlayerTurn() {
-        return this.currentPlayer == this.playerColor;
-    }
+
+	public boolean isLocalPlayerTurn() {
+		return this.currentPlayer == this.playerColor;
+	}
 
 	@Override
 	public void paintComponent(Graphics G) {

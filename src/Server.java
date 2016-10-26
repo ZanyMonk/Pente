@@ -35,48 +35,54 @@ public class Server extends Thread {
 			System.err.println("Couldn't start server. Shit happens ...");
 		}		
 	}
-    
-    public void handleConnection() throws IOException {
-        this.socket = this.server.accept();
 
-        if(this.socket != null) {
-            ByteBuffer buff = ByteBuffer.allocateDirect(1024);
-            String data = "";
-            @SuppressWarnings("unused")
-            int code = 0;
-            while((code = this.socket.read(buff)) > 0) {
-                byte[] bytes = new byte[buff.position()];
-                buff.flip();
-                buff.get(bytes);
-                data += new String(bytes, Charset.forName("UTF-8"));
-            }
+	public void handleConnection() throws IOException {
+		this.socket = this.server.accept();
 
-            this.board.makeMove(this.parsePacket(data.trim()));
+		if(this.socket != null) {
+			ByteBuffer buff = ByteBuffer.allocateDirect(1024);
+			String data = "";
+			@SuppressWarnings("unused")
+			int code = 0;
+			while((code = this.socket.read(buff)) > 0) {
+				byte[] bytes = new byte[buff.position()];
+				buff.flip();
+				buff.get(bytes);
+				data += new String(bytes, Charset.forName("UTF-8"));
+			}
 
-            this.socket.close();
-        }
-    }
+			this.board.makeMove(this.parsePacket(data.trim()));
+		}
+	}
 
 	public HashMap<String, String> parsePacket(String data) {
 		HashMap<String, String> cmd = new HashMap();
 		String[] s = data.split(":");
 		String[] validCmd = { "HELLO", "MOVE" };
-        
-        if(s.length > 1 && s.length%2 == 0) {
-            for(int i = s.length/2; i >= 0; i -= 2) {
-                if(Arrays.binarySearch(validCmd, s[i-1]) > -1) {
-                    cmd.put(s[i-1], s[i]);
-                }
-            }
-        }
+
+		if(s.length > 1 && s.length%2 == 0) {
+			for(int i = s.length/2; i >= 0; i -= 2) {
+				if(Arrays.binarySearch(validCmd, s[i-1]) > -1) {
+					cmd.put(s[i-1], s[i]);
+				}
+			}
+		}
 		return cmd;
 	}
+	
+	public void closeSocket() {
+		try {
+			this.socket.close();
+		} catch(IOException e) {
+			System.err.println("Couldn't close socket.");
+		}
+	}
 
-    @Override
+	@Override
 	public void run() {
 		try {
 			while(true) {
-                this.handleConnection();
+				this.handleConnection();
 
 				try {
 					Thread.sleep(1000);
