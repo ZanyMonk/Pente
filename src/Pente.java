@@ -3,8 +3,6 @@ public class Pente {
 	private MainWindow W;
 
 	Pente() {
-		System.setProperty("awt.useSystemAAFontSettings","on");
-		System.setProperty("swing.aatext", "true");
 		W = new MainWindow();
 	}
 

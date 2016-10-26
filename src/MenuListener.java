@@ -45,15 +45,6 @@ public class MenuListener implements ActionListener {
 					this.board.host(port);
 				}
 				break;
-			case "HELLO":
-				System.out.println("Opponent connected");
-				break;
-			case "QUIT":
-				System.out.println("Opponent just quitted");
-				break;
-			case "MOVE":
-				System.out.println("Opponent puts a pawn at "+this.board.opponentMove);
-				break;
 			default:
 				break;
 		}

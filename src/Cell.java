@@ -15,8 +15,8 @@ import javax.swing.JButton;
 
 @SuppressWarnings("serial")
 public class Cell extends JButton {
+	final private int size = 29;
 	private int x, y;		// Position on the board in pixels
-	private int size = 29;
 	private int state = 0;	// 0: White; 1: Black
 	private boolean hover = false;
 	private boolean played = false; // First, the pawn remains to be played
@@ -33,21 +33,29 @@ public class Cell extends JButton {
 			public void stateChanged(ChangeEvent e) {
 				Cell c = (Cell)e.getSource();
 				Board b = (Board)c.getParent();
-				if(b.isPlaying()) {
+                if(b.isPlaying() && !c.isPlayed() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
+					b.blurCells();
 					c.toggleHover();
-					c.getParent().repaint();
-				}
+                    c.getParent().repaint();
+                }
 			}
 		});
 		
 		addMouseListener(new MouseAdapter() {
+            @Override
 			public void mouseClicked(MouseEvent e) {
 				Cell c = (Cell)e.getComponent();
 				Board b = (Board)c.getParent();
-				if(!c.isPlayed() && b.isPlaying() && b.checkMove(c)) {
+				if(
+                        !c.isPlayed()
+                    &&  b.isPlaying()
+                    &&  b.checkMove(c)
+                    && (!b.isPlayingOnline() || b.isLocalPlayerTurn())
+                ) {
 					c.setState(b.getPlayer());
-					b.nextTurn();
 					c.play();
+					c.blur();
+					b.nextTurn();
 				}
 			}
 		});
@@ -79,6 +87,14 @@ public class Cell extends JButton {
 	public void toggleHover() {
 		this.hover = !this.hover;
 	}
+	
+	public void hover() {
+		this.hover = true;
+	}
+    
+    public void blur() {
+        this.hover = false;
+    }
 	
 	public boolean isPlayed() {
 		return this.played;

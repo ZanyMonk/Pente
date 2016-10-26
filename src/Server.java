@@ -35,38 +35,48 @@ public class Server extends Thread {
 			System.err.println("Couldn't start server. Shit happens ...");
 		}		
 	}
+    
+    public void handleConnection() throws IOException {
+        this.socket = this.server.accept();
+
+        if(this.socket != null) {
+            ByteBuffer buff = ByteBuffer.allocateDirect(1024);
+            String data = "";
+            @SuppressWarnings("unused")
+            int code = 0;
+            while((code = this.socket.read(buff)) > 0) {
+                byte[] bytes = new byte[buff.position()];
+                buff.flip();
+                buff.get(bytes);
+                data += new String(bytes, Charset.forName("UTF-8"));
+            }
+
+            this.board.makeMove(this.parsePacket(data.trim()));
+
+            this.socket.close();
+        }
+    }
 
 	public HashMap<String, String> parsePacket(String data) {
-		HashMap<String, String> cmd = new HashMap<String, String>();
+		HashMap<String, String> cmd = new HashMap();
 		String[] s = data.split(":");
-		String[] validCmd = { "HELLO" };
-		if(Arrays.binarySearch(validCmd, s[0]) > -1) {
-			cmd.put(s[0], s[1]);
-		}
+		String[] validCmd = { "HELLO", "MOVE" };
+        
+        if(s.length > 1 && s.length%2 == 0) {
+            for(int i = s.length/2; i >= 0; i -= 2) {
+                if(Arrays.binarySearch(validCmd, s[i-1]) > -1) {
+                    cmd.put(s[i-1], s[i]);
+                }
+            }
+        }
 		return cmd;
 	}
 
+    @Override
 	public void run() {
 		try {
 			while(true) {
-				this.socket = this.server.accept();
-
-				if(this.socket != null) {
-					ByteBuffer buff = ByteBuffer.allocateDirect(1024);
-					String data = "";
-					@SuppressWarnings("unused")
-					int code = 0;
-					while((code = this.socket.read(buff)) > 0) {
-						byte[] bytes = new byte[buff.position()];
-						buff.flip();
-						buff.get(bytes);
-						data += new String(bytes, Charset.forName("UTF-8"));
-					}
-
-					this.board.makeMove(this.parsePacket(data));
-
-					this.socket.close();
-				}
+                this.handleConnection();
 
 				try {
 					Thread.sleep(1000);

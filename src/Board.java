@@ -20,14 +20,13 @@ public class Board extends JPanel {
 	private int 		margin = 25;
 	private int 		cellSize = 30;
 	private int			headerSize = 25;
-	private int			player = 0; // White begins
+	private int			playerColor = 0;
+    private int         currentPlayer = 0; // White begins
 	private boolean		playing = false;
 	private MainWindow	parent = null;
 	private Server		server;
 	private Client		client;
-	
-	public String		opponentMove = "";
-	
+    private Opponent    opponent = new Opponent();
 	
 	Board() {
 		super();
@@ -35,7 +34,6 @@ public class Board extends JPanel {
 		try {
 			background = ImageIO.read(Board.class.getResource("/background.jpg"));
 		} catch (IOException e) {
-			e.printStackTrace();
 			System.out.println("Couldn't load background image.");
 		}
 
@@ -70,7 +68,7 @@ public class Board extends JPanel {
 		this.playing = false;
 		if(JOptionPane.showConfirmDialog(
 			this,
-			(this.player == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
+			(this.currentPlayer == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
 			"Victory !",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.INFORMATION_MESSAGE
@@ -80,37 +78,48 @@ public class Board extends JPanel {
 			this.nextTurn();
 		}
 	}
+    
+    public void blurCells() {
+        Cell c;
+		for (int y = 18; y >= 0; y--) {
+			for (int x = 18; x >= 0; x--) {
+                c = this.getCellAt(x, y);
+                c.blur();
+            }
+        }
+    }
 	
 	public int getPlayer() {
-		return this.player;
+		return this.currentPlayer;
 	}
 	
 	public int nextTurn() {
-		this.player = (this.player+1)%2;
+		this.currentPlayer = (this.currentPlayer+1)%2;
 		
-		return this.player;
+		return this.currentPlayer;
 	}
 	
 	// Indexes
 	//			0
-	//		7		1
-	//	6				2
-	//		5		3
-	//			4
+	//				1
+	//			C		2
+	//				3
+	//
+    // 0 = North, 1 = North-East etc ...
+    //
 	// Value
 	// -1 = no alignment
 	// 0 = five aligned
 	// 1 = two enemies aligned and surrounded
 	public int[] checkAlignement(Cell source, int player) {
-		int[] res = { -1, -1, -1, -1, -1, -1, -1, -1 };
+		int[] res = { -1, -1, -1, -1 };
 		
 		int v = 0, h = 1;
 		
 		for(int i = 0; i < 4; i++) { // Test N, NE, E, SE
 			if(!(v == 1 && h == 1)) {
 				int n = 5;
-				int x = 0;
-				int y = 0;
+				int x, y;
 				int winCount = 1;
 				
 				// We go to the farthest accessible intersection from the source toward a direction between N and SE
@@ -124,21 +133,23 @@ public class Board extends JPanel {
 					
 					if(x > 18 || y > 18) {	// Intersection is not accessible
 						continue;
-					} else if(x < 0) {		// Intersection is out of the board
-						break;
-					} else {				// Intersection is valid
-						Cell cell = this.getCellAt(x, y);
-						if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
-							winCount++;
-						} else {
-							winCount = 1;
-						}
-						
-						if(winCount >= 5) {	// Yeah ... you win !
-							res[i] = 0;
-						}
 					}
-					
+                    if(x < 0) {		// Intersection is out of the board
+						break;
+					}
+                    // Intersection is valid
+                    Cell cell = this.getCellAt(x, y);
+                    if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
+                        winCount++;
+                    } else {
+                        winCount = 1;
+                    }
+
+                    // DEV__Check if two enemy pawns are surrounded by two of our ones
+                    
+                    if(winCount >= 5) {	// Yeah ... you win !
+                        res[i] = 0;
+                    }
 				}
 			}
 
@@ -149,16 +160,16 @@ public class Board extends JPanel {
 			}
 		}
 		
-		
-		
-		// DEV__Check if two enemy pawns are surrounded by two of our ones
-		
 		return res;
 	}
 	
 	public boolean checkMove(Cell cell) {
+        if(cell.isPlayed()) {
+            return false;
+        }
+        
 		boolean win = false;
-		int[] r = this.checkAlignement(cell, this.player);
+		int[] r = this.checkAlignement(cell, this.currentPlayer);
 		
 		for(int i = r.length-1; i >= 0; i--) {
 			if(r[i] == 0) {
@@ -198,7 +209,7 @@ public class Board extends JPanel {
 			this.playing = true;
 			this.initBoard();
 			Cell first = this.getCellAt(9, 9);
-			first.setColor(this.player);
+			first.setColor(this.currentPlayer);
 			first.play();
 			this.nextTurn();
 		}
@@ -217,13 +228,57 @@ public class Board extends JPanel {
 	}
 	
 	public boolean makeMove(HashMap<String, String> cmd) {
-		for(String c : cmd.keySet()) {
-			this.opponentMove = cmd.get(c);
-			System.out.println(c);
-			this.parent.menuListener.actionPerformed(new ActionEvent(this, 1, c));
+		
+				System.out.println(this.getCellAt(0, 0).isHover());
+		for(String c : cmd.keySet()) {  // Java8 needed
+			String data = cmd.get(c);
+            switch(c) {
+                case "HELLO":
+                    this.opponent.login(data);
+                    System.out.println("Opponent named \""+data+"\" has connected");
+                    break;
+                case "QUIT":
+                    if(this.opponent.isConnected()) {
+                        this.opponent.logout();
+                        System.out.println("Opponent just quitted");
+                    }
+                    break;
+                case "MOVE":
+                    if(this.opponent.isConnected()) {
+                        int x, y;
+                        String[] coords = data.split(",");
+                        x = Integer.parseInt(coords[0]);
+                        y = Integer.parseInt(coords[1]);
+                        this.playOpponentMove(x, y);
+                    }
+                    break;
+            }
 		}
 		return true;
 	}
+	
+	public boolean playOpponentMove(int x, int y) {
+		Cell cell = this.getCellAt(x, y);
+		if(this.checkMove(cell)) {
+			System.out.println("("+x+","+y+")");
+			cell.setColor(this.currentPlayer);
+			cell.play();
+            this.nextTurn();
+			this.repaint();
+			return true;
+		} else {
+			System.out.println("Couldn't put pawn here.");
+			return false;
+		}
+	}
+	
+	public boolean isPlayingOnline() {
+		return this.server != null || this.client != null;
+	}
+    
+    public boolean isLocalPlayerTurn() {
+        return this.currentPlayer == this.playerColor;
+    }
 
 	@Override
 	public void paintComponent(Graphics G) {
