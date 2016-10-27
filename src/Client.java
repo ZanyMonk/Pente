@@ -6,18 +6,14 @@ public class Client {
 	private int port;
 	private Socket socket;
 	
-	Client() {
+	Client() throws IOException {
 		this(Server.defaultHost, Server.defaultPort);
 	}
 	
-	Client(String host, int port) {
+	Client(String host, int port) throws IOException{
 		this.host = host;
 		this.port = port;
-		try {
-			this.socket = new Socket(this.host, this.port);
-		} catch(IOException e) {
-			System.err.println("Couldn't connect to host.");
-		}
+		this.socket = new Socket(this.host, this.port);
 	}
 	
 }

@@ -52,6 +52,8 @@ public class Server extends Thread {
 			}
 
 			this.board.makeMove(this.parsePacket(data.trim()));
+			
+			this.socket.close();
 		}
 	}
 

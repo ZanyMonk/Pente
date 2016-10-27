@@ -36,7 +36,10 @@ public class JoinForm extends JFrame {
 		this.submitButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JoinForm form = (JoinForm)((JButton)e.getSource()).getParent().getParent().getParent().getParent();
-				form.board.join(form.hostField.getText(), Integer.parseInt(form.portField.getText()));
+				boolean success = form.board.join(form.hostField.getText(), Integer.parseInt(form.portField.getText()));
+				if(success) {
+					form.setVisible(false);
+				}
 			}
 		});
 	}
@@ -49,7 +52,9 @@ public class JoinForm extends JFrame {
 			pane.add(this.portLabel);
 			pane.add(this.portField);
 			pane.add(this.submitButton);
-		
+
+			getRootPane().setDefaultButton(this.submitButton);
+			
 			this.layoutInitialized = true;
 			this.layout.putConstraint(
 				SpringLayout.WEST,

@@ -1,17 +1,21 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.imageio.ImageIO;
+
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.FontMetrics;
 import java.awt.image.BufferedImage;
-import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
 
 import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 @SuppressWarnings("serial")
@@ -23,9 +27,10 @@ public class Board extends JPanel {
 	private int			playerColor = 0;
 	private int			currentPlayer = 0; // White begins
 	private boolean		playing = false;
+	private JPanel		status = new JPanel();
 	private MainWindow	parent = null;
-	private Server		server;
-	private Client		client;
+	private Server		server = null;
+	private Client		client = null;
 	private Opponent	opponent = new Opponent();
 	
 	Board() {
@@ -38,7 +43,7 @@ public class Board extends JPanel {
 		}
 
 		setLayout(null);
-
+		
 		initBoard();
 	}
 	
@@ -47,21 +52,51 @@ public class Board extends JPanel {
 		
 		this.parent = parent;
 	}
+	
+	private void setStatusText(String text) {
+		this.setStatusText(text, "white");
+	}
+	
+	private void setStatusText(String text, String color) {
+		((JLabel)this.status.getComponents()[0]).setText(
+			"<html>"
+				+"<font style='font-weight:100;' color='"+color+"'>"+text+"</font>"
+			+"</html>"
+		);
+		this.status.repaint();
+	}
+	
+	private void setStatusError(String text) {
+		this.setStatusText(text, "red");
+	}
+	
+	private void setStatusSuccess(String text) {
+		this.setStatusText(text, "green");
+	}
 
 	private void initBoard() {
 		removeAll();
-		Cell b;
+		this.status = new JPanel(new BorderLayout());
+		this.status.add(new JLabel(""));
+		this.status.setBounds(5, 613, 623, 20);
+		this.status.setBackground(new Color(0,0,0,0));
+		add(this.status);
+		this.setStatusText("");
+		Cell c;
 		for (int y = 19; y > 0; y--) {
 			for (int x = 19; x > 0; x--) {
-				b = new Cell(x*this.cellSize+20, y*this.cellSize+20, x, y);
-				add(b);
+				c = new Cell(x*this.cellSize+20, y*this.cellSize+20, x, y);
+				add(c);
 			}
 		}
 		repaint();
 	}
 	
 	private Cell getCellAt(int x, int y) {
-		return (Cell)this.getComponent(19*19-(19*(y < 0 ? 0 : y)+x)-1);
+		x = (x < 0 ? 0 : (x > 18 ? 18 : x)); // x & y in [0, 18]
+		y = (y < 0 ? 0 : (y > 18 ? 18 : y));
+		Component[] compos = getComponents();
+		return (Cell)compos[compos.length-(19*y+x)-1];
 	}
 	
 	private void win() {
@@ -97,6 +132,8 @@ public class Board extends JPanel {
 	
 	public int nextTurn() {
 		this.currentPlayer = (this.currentPlayer+1)%2;
+		
+		this.setStatusText((this.currentPlayer == 0 ? "White" : "Black")+" turn.");
 		
 		return this.currentPlayer;
 	}
@@ -208,17 +245,25 @@ public class Board extends JPanel {
 		}
 		
 		if(confirm) {
-			this.playing = true;
 			this.initBoard();
 			Cell first = this.getCellAt(9, 9);
 			first.setColor(this.currentPlayer);
 			first.play();
 			this.nextTurn();
+			this.setStatusText("New game started.");
+			this.playing = true;
 		}
 	}
 	
-	public void join(String host, int port) {
-		this.client = new Client(host, port);
+	public boolean join(String host, int port) {
+		try {
+			this.client = new Client(host, port);
+			this.setStatusSuccess("Client connected.");
+			return true;
+		} catch(IOException e) {
+			this.setStatusError("Couldn't connect to host.");
+			return false;
+		}
 	}
 	
 	public void host(String rawPort) {
@@ -226,31 +271,33 @@ public class Board extends JPanel {
 		try {
 			port = Integer.parseInt(rawPort);
 		} catch(NumberFormatException err) {
-			System.err.println("This is no valid port.");
+			this.setStatusError("This is no valid port.");
 		}
 		this.server = new Server(port, this);
 		this.server.start();
+		this.setStatusText("Waiting for an opponent on port "+port+" ...");
 	}
 	
 	public boolean makeMove(HashMap<String, String> cmd) {
-		System.out.println(this.getCellAt(0, 0).isHover());
 		for(String c : cmd.keySet()) {  // Java8 needed
 			String data = cmd.get(c);
 			switch(c) {
 				case "HELLO":
-					this.opponent.login(data);
-					this.newGame();
-					System.out.println("Opponent named \""+data+"\" has connected");
+					if(!this.opponent.isConnected()) {
+						this.opponent.login(data);
+						this.newGame();
+						this.setStatusText("Opponent named \""+data+"\" has connected");
+					}
 					break;
 				case "QUIT":
 					if(this.opponent.isConnected()) {
 						this.opponent.logout();
-						System.out.println("Opponent just quitted");
+						this.setStatusError("Opponent just quitted");
 						this.server.closeSocket();
 					}
 					break;
 				case "MOVE":
-					if(this.opponent.isConnected()) {
+					if(this.opponent.isConnected() && this.currentPlayer != this.playerColor) {
 						int x, y;
 						String[] coords = data.split(",");
 						x = Integer.parseInt(coords[0]);
@@ -273,7 +320,6 @@ public class Board extends JPanel {
 			this.repaint();
 			return true;
 		} else {
-			System.out.println("Couldn't put pawn here.");
 			return false;
 		}
 	}

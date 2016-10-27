@@ -19,13 +19,13 @@ public class MainWindow extends JFrame {
 	MainWindow() {
 		super("Pente");
 
-		setSize(new Dimension(633, 676));
+		setSize(new Dimension(633, 687));
 		setResizable(false);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		menuBar = new JMenuBar();
-		board = new Board(this);
+		this.menuBar = new JMenuBar();
+		this.board = new Board(this);
 		
 		this.menuListener = new MenuListener(board);
 		
@@ -82,11 +82,12 @@ public class MainWindow extends JFrame {
 		
 		helpMenu.add(aboutMenuItem);
 		
-		menuBar.add(fileMenu);
-		menuBar.add(helpMenu);
+		this.menuBar.add(fileMenu);
+		this.menuBar.add(helpMenu);
+		
 
-		setJMenuBar(menuBar);
-		setContentPane(board);
+		setJMenuBar(this.menuBar);
+		setContentPane(this.board);
 		setVisible(true);
 	}
 

@@ -7,8 +7,7 @@ public class Opponent {
 	private String  name = "";
 	private boolean connected = false;
 
-	Opponent() {
-	}
+	Opponent() { }
 
 	public void login(String name) {
 		this.name = name;
