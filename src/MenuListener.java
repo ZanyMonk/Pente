@@ -17,7 +17,9 @@ public class MenuListener implements ActionListener {
 		Window frame = JFrame.getWindows()[0];
 		switch(e.getActionCommand()) {
 			case "Quit":
-				frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				if(this.board.confirmNoSave()) {
+					frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				}
 				break;
 			case "About":
 				JOptionPane.showMessageDialog(

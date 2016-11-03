@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ServerSocketChannel;
 
-public class Server extends Thread {
+public final class Server extends Thread {
 	public static int defaultPort = 1337;
 	public static String defaultHost = "127.0.0.1";
 	private int port = Server.defaultPort;

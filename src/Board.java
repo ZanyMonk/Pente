@@ -71,7 +71,7 @@ public class Board extends JPanel {
 	}
 	
 	private void setStatusSuccess(String text) {
-		this.setStatusText(text, "green");
+		this.setStatusText(text, "#7ABF30");
 	}
 
 	private void initBoard() {
@@ -167,8 +167,8 @@ public class Board extends JPanel {
 				// fourth cell behind the origin or a side of the board.
 				while(n > -4) {
 					n--;
-					x = source.iX+(h-1)*n;
-					y = source.iY+(v-1)*n;
+					x = source.iX + (h - 1) * n;
+					y = source.iY + (v - 1) * n;
 					
 					if(x > 18 || y > 18) {	// Intersection is not accessible
 						continue;
@@ -192,10 +192,10 @@ public class Board extends JPanel {
 				}
 			}
 
-			if(i%3 == 0) { // Rotate N > NE > E > SE
-				h = (h+1)%3;
+			if(i % 3 == 0) { // Rotate N > NE > E > SE
+				h = (h + 1) % 3;
 			} else {
-				v = (v+1)%3;
+				v = (v + 1) % 3;
 			}
 		}
 		
@@ -207,17 +207,16 @@ public class Board extends JPanel {
 			return false;
 		}
 
-		boolean win = false;
-		int[] r = this.checkAlignement(cell, this.currentPlayer);
-		
-		for(int i = r.length-1; i >= 0; i--) {
-			if(r[i] == 0) {
-				win = true;
-			}
+		if(Math.abs(cell.iX-9) > 3 || Math.abs(cell.iY-9) > 3) {
+			return false;
 		}
 		
-		if(win) {
-			this.win();
+		int[] r = this.checkAlignement(cell, this.currentPlayer);
+		
+		for(int i = r.length - 1; i >= 0; i--) {
+			if(r[i] == 0 && this.currentPlayer == this.playerColor) {
+				this.win();
+			}
 		}
 		
 		return true;
@@ -227,7 +226,7 @@ public class Board extends JPanel {
 		return this.playing;
 	}
 	
-	public boolean confirmNewGame() {
+	public boolean confirmNoSave() {
 		return JOptionPane.showConfirmDialog(
 			this,
 			"Your current game won't be saved. Are you sure to start a new game ?",
@@ -241,10 +240,11 @@ public class Board extends JPanel {
 		boolean confirm = true;
 		
 		if(this.playing) {
-			confirm = this.confirmNewGame();
+			confirm = this.confirmNoSave();
 		}
 		
 		if(confirm) {
+			this.playing = false;
 			this.initBoard();
 			Cell first = this.getCellAt(9, 9);
 			first.setColor(this.currentPlayer);
@@ -257,7 +257,7 @@ public class Board extends JPanel {
 	
 	public boolean join(String host, int port) {
 		try {
-			this.client = new Client(host, port);
+			this.client = new Client("Unknown", host, port);
 			this.setStatusSuccess("Client connected.");
 			return true;
 		} catch(IOException e) {

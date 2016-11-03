@@ -33,9 +33,11 @@ public class Cell extends JButton {
 			public void stateChanged(ChangeEvent e) {
 				Cell c = (Cell)e.getSource();
 				Board b = (Board)c.getParent();
-				if(b.isPlaying() && !c.isPlayed() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
+				if(b.isPlaying() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
 					b.blurCells();
-					c.toggleHover();
+					if(b.checkMove(c)) {
+						c.toggleHover();
+					}
 					c.getParent().repaint();
 				}
 			}
