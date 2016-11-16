@@ -33,22 +33,33 @@ public class MenuListener implements ActionListener {
 				this.board.newGame();
 				break;
 			case "Join":
-				JoinForm form = new JoinForm(this.board);
-				form.showWindow();
+				if(!this.board.isPlayingOnline() || this.board.confirmNoSave()) {
+					this.board.shutdownServer();
+					JoinForm form = new JoinForm(this.board);
+					form.showWindow();
+				}
 				break;
 			case "Host":
-				String port = (String)JOptionPane.showInputDialog(
-					frame,
-					"Port",
-					"Host settings",
-					JOptionPane.INFORMATION_MESSAGE,
-					null,
-					null,
-					"1337"
-				);
+				String port = null;
+				boolean err = false;
 				
-				if(port != null) {
-					this.board.host(port);
+				while(port == null || err) {
+					port = (String)JOptionPane.showInputDialog(
+						frame,
+						"Port",
+						"Host settings",
+						JOptionPane.INFORMATION_MESSAGE,
+						null,
+						null,
+						"1337"
+					);
+					
+					System.out.println(port);
+					
+					err = !this.board.host(port);
+					if(port == null) {
+						break;
+					}
 				}
 				break;
 			default:

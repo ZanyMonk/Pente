@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.imageio.ImageIO;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
@@ -11,8 +9,11 @@ import java.awt.RenderingHints;
 import java.awt.FontMetrics;
 import java.awt.image.BufferedImage;
 import java.awt.BorderLayout;
+import java.awt.event.WindowEvent;
 
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -51,6 +52,14 @@ public class Board extends JPanel {
 		this();
 		
 		this.parent = parent;
+		
+		this.parent.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				((MainWindow)e.getWindow()).board.quit();
+				System.exit(0);
+			}
+		});
 	}
 	
 	private void setStatusText(String text) {
@@ -58,6 +67,8 @@ public class Board extends JPanel {
 	}
 	
 	private void setStatusText(String text, String color) {
+		((JLabel)this.status.getComponents()[0]).setText("");
+		this.repaint();
 		((JLabel)this.status.getComponents()[0]).setText(
 			"<html>"
 				+"<font style='font-weight:100;' color='"+color+"'>"+text+"</font>"
@@ -101,17 +112,42 @@ public class Board extends JPanel {
 	
 	private void win() {
 		this.playing = false;
-		if(JOptionPane.showConfirmDialog(
-			this,
-			(this.currentPlayer == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
-			"Victory !",
-			JOptionPane.YES_NO_OPTION,
-			JOptionPane.INFORMATION_MESSAGE
-		) == 0) {
+		
+		if(this.isPlayingOnline()) {
+			this.server.sendWin(this.playerColor);
+		}
+		
+		if(this.win(this.playerColor)) {
 			this.nextTurn();
 			this.newGame();
 			this.nextTurn();
 		}
+	}
+	
+	private int countPlayedCells() {
+		int count = 0;
+		
+		Cell c;
+		for (int y = 18; y >= 0; y--) {
+			for (int x = 18; x >= 0; x--) {
+				c = this.getCellAt(x, y);
+				if(c.isPlayed()) {
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	public boolean win(int color) {
+		return JOptionPane.showConfirmDialog(
+			this,
+			(color == 0 ? "White" : "Black")+" wins the game !\nDo you want to start a new game ?",
+			"Victory !",
+			JOptionPane.YES_NO_OPTION,
+			JOptionPane.INFORMATION_MESSAGE
+		) == 0;
 	}
 
 	public void blurCells() {
@@ -203,19 +239,24 @@ public class Board extends JPanel {
 	}
 	
 	public boolean checkMove(Cell cell) {
+		return this.checkMove(cell, true);
+	}
+	
+	public boolean checkMove(Cell cell, boolean played) {
 		if(cell.isPlayed()) {
 			return false;
 		}
-
-		if(Math.abs(cell.iX-9) > 3 || Math.abs(cell.iY-9) > 3) {
+		
+		if(this.countPlayedCells() == 1 && (Math.abs(cell.iX-9) > 3 || Math.abs(cell.iY-9) > 3)) {
 			return false;
 		}
-		
 		int[] r = this.checkAlignement(cell, this.currentPlayer);
 		
 		for(int i = r.length - 1; i >= 0; i--) {
 			if(r[i] == 0 && this.currentPlayer == this.playerColor) {
-				this.win();
+				if(played) {
+					this.win();
+				}
 			}
 		}
 		
@@ -236,14 +277,12 @@ public class Board extends JPanel {
 		) == 0;
 	}
 	
+	public void setPlayerColor(int c) {
+		this.playerColor = c;
+	}
+	
 	public void newGame() {
-		boolean confirm = true;
-		
-		if(this.playing) {
-			confirm = this.confirmNoSave();
-		}
-		
-		if(confirm) {
+		if(!this.isPlaying() || this.confirmNoSave()) {
 			this.playing = false;
 			this.initBoard();
 			Cell first = this.getCellAt(9, 9);
@@ -255,9 +294,17 @@ public class Board extends JPanel {
 		}
 	}
 	
+	public void quit() {
+		if(this.isPlayingOnline()) {
+			if(this.client != null) {
+				this.client.sendQuit();
+			}
+		}
+	}
+	
 	public boolean join(String host, int port) {
 		try {
-			this.client = new Client("Unknown", host, port);
+			this.client = new Client("Unknown", host, port, this);
 			this.setStatusSuccess("Client connected.");
 			return true;
 		} catch(IOException e) {
@@ -266,16 +313,41 @@ public class Board extends JPanel {
 		}
 	}
 	
-	public void host(String rawPort) {
+	public boolean host(String rawPort) {
 		int port = Server.defaultPort;
+		boolean error = false;
 		try {
-			port = Integer.parseInt(rawPort);
+			port = Integer.parseInt(rawPort);	
 		} catch(NumberFormatException err) {
+			error = true;
 			this.setStatusError("This is no valid port.");
 		}
+		if(port == 0 || error) {
+			return false;
+		}
+		
 		this.server = new Server(port, this);
 		this.server.start();
 		this.setStatusText("Waiting for an opponent on port "+port+" ...");
+		return true;
+	}
+	
+	public void shutdownServer() {
+		if(this.server != null) {
+			this.server.closeSocket();
+			this.server = null;
+		}
+	}
+	
+	public void play(Cell cell) {
+		cell.play();
+		if(this.isPlayingOnline()) {
+			if(this.server != null) {
+				this.server.sendMove(cell);
+			} else {
+				this.client.sendMove(cell);
+			}
+		}
 	}
 	
 	public boolean makeMove(HashMap<String, String> cmd) {
@@ -287,6 +359,7 @@ public class Board extends JPanel {
 						this.opponent.login(data);
 						this.newGame();
 						this.setStatusText("Opponent named \""+data+"\" has connected");
+						this.server.sendStart();
 					}
 					break;
 				case "QUIT":
@@ -302,7 +375,7 @@ public class Board extends JPanel {
 						String[] coords = data.split(",");
 						x = Integer.parseInt(coords[0]);
 						y = Integer.parseInt(coords[1]);
-						this.playOpponentMove(x, y);
+						return this.playOpponentMove(x, y);
 					}
 					break;
 			}
@@ -314,7 +387,7 @@ public class Board extends JPanel {
 		Cell cell = this.getCellAt(x, y);
 		if(this.checkMove(cell)) {
 			System.out.println("("+x+","+y+")");
-			cell.setColor(this.currentPlayer);
+			cell.setColor((this.playerColor+1)%2);
 			cell.play();
 			this.nextTurn();
 			this.repaint();

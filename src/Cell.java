@@ -35,7 +35,7 @@ public class Cell extends JButton {
 				Board b = (Board)c.getParent();
 				if(b.isPlaying() && (!b.isPlayingOnline() || b.isLocalPlayerTurn())) {
 					b.blurCells();
-					if(b.checkMove(c)) {
+					if(b.checkMove(c, false)) {
 						c.toggleHover();
 					}
 					c.getParent().repaint();
@@ -55,7 +55,7 @@ public class Cell extends JButton {
 					&& (!b.isPlayingOnline() || b.isLocalPlayerTurn())
 				) {
 					c.setState(b.getPlayer());
-					c.play();
+					b.play(c);
 					c.blur();
 					b.nextTurn();
 				}

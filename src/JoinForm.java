@@ -1,4 +1,6 @@
 import java.awt.Container;
+import java.awt.Point;
+import java.awt.Dimension;
 
 import javax.swing.JFrame;
 import javax.swing.SpringLayout;
@@ -24,13 +26,16 @@ public class JoinForm extends JFrame {
 		
 		this.layout = new SpringLayout();
 		setLayout(this.layout);
-		setSize(185, 105);
+		Point p = this.board.getLocationOnScreen();
+		Dimension s = this.board.getSize();
+		setSize(new Dimension(225, 105));
+		setLocation(new Point(p.x+s.width/2-this.getSize().width/2, p.y+s.height/2-50));
 		
 		this.hostLabel = new JLabel("Host: ");
 		this.portLabel = new JLabel("Port: ");
 		
-		this.hostField = new JTextField(Server.defaultHost, 10);
-		this.portField = new JTextField(((Integer)Server.defaultPort).toString(), 10);
+		this.hostField = new JTextField(Server.defaultHost, 13);
+		this.portField = new JTextField(((Integer)Server.defaultPort).toString(), 13);
 		
 		this.submitButton = new JButton("Join");
 		this.submitButton.addActionListener(new ActionListener() {
@@ -118,7 +123,7 @@ public class JoinForm extends JFrame {
 			this.layout.putConstraint(
 				SpringLayout.WEST,
 				this.submitButton,
-				60,
+				80,
 				SpringLayout.WEST,
 				pane
 			);

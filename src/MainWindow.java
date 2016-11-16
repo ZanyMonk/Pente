@@ -12,8 +12,8 @@ import javax.swing.JFrame;
 @SuppressWarnings("serial")
 public class MainWindow extends JFrame {
 	private JMenuBar menuBar;
-	private Board board;
 	
+	public Board board;
 	public MenuListener menuListener;
 
 	MainWindow() {

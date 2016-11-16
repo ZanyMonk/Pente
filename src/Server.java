@@ -50,22 +50,31 @@ public final class Server extends Thread {
 				buff.get(bytes);
 				data += new String(bytes, Charset.forName("UTF-8"));
 			}
+			
+			if(code == -1) {
+				this.closeSocket();
+			} else {
+				buff.clear();
+			}
+			
+			System.out.println("Packet received.");
+			System.out.println(code);
 
 			this.board.makeMove(this.parsePacket(data.trim()));
-			
-			this.socket.close();
 		}
 	}
 
 	public HashMap<String, String> parsePacket(String data) {
 		HashMap<String, String> cmd = new HashMap();
 		String[] s = data.split(":");
-		String[] validCmd = { "HELLO", "MOVE" };
+		String[] validCmd = { "HELLO", "MOVE", "QUIT" };
 
 		if(s.length > 1 && s.length%2 == 0) {
 			for(int i = s.length/2; i >= 0; i -= 2) {
-				if(Arrays.binarySearch(validCmd, s[i-1]) > -1) {
-					cmd.put(s[i-1], s[i]);
+				for(String c : validCmd) {
+					if(c.compareTo(s[i-1]) == 0) {
+						cmd.put(s[i-1], s[i]);
+					}
 				}
 			}
 		}
@@ -79,12 +88,40 @@ public final class Server extends Thread {
 			System.err.println("Couldn't close socket.");
 		}
 	}
+	
+	private void sendMsg(String msg) {
+		byte[] bytes = msg.getBytes();
+		ByteBuffer buff = ByteBuffer.wrap(bytes);
+		try {
+			this.socket.write(buff);
+		} catch(IOException e) {
+			System.err.println("Couldn't send "+msg.split(":")[0]+" to server.");
+		}
+	}
 
+	public void sendMove(Cell cell) {
+		this.sendMsg("MOVE:"+cell.iX+","+cell.iY);
+	}
+	
+	public void sendStart() {
+		this.sendMsg("START:WHITE");
+		this.closeSocket();
+	}
+	
+	public void sendWin(int color) {
+		this.sendMsg("WIN:"+(color == 0 ? "WHITE" : "BLACK1"));
+		this.closeSocket();
+	}
+	
 	@Override
 	public void run() {
 		try {
 			while(true) {
-				this.handleConnection();
+				// Wait for a move only when it's not our turn
+				// or when the game isn't started yet
+				if(!this.board.isPlaying() || !this.board.isLocalPlayerTurn()) {
+					this.handleConnection();
+				}
 
 				try {
 					Thread.sleep(1000);
