@@ -1,0 +1,115 @@
+\documentclass[12pt]{article}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black,
+	linktoc=all,
+	bookmarksdepth=paragraph
+}
+\usepackage[cyr]{aeguill}
+\usepackage[utf8]{inputenc}
+\usepackage[francais]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+
+\newcommand\todo[1]{\textcolor{red}{#1}}
+
+\title{Jeu de Pente}
+\author{Lucien Aubert $\newline$ Auguste Taillade}
+
+\makeatletter
+\let\theauthor\@author
+\let\thetitle\@title
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\chead{\thetitle}
+\cfoot{\thepage}
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+    \href{http://iut.univ-amu.fr/sites/arles}{\includegraphics[scale = 0.15]{logo-amu.png}}\\[1.0 cm]
+    \textsc{\LARGE Aix-Marseille Université}\\[2.0 cm]
+	\textsc{\Large M3105 - Conception et programmation objet avancées}\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+
+	\begin{minipage}[t]{0.4\textwidth}
+		\begin{flushleft} \large
+			\emph{Auteurs :}\\
+			\theauthor
+			\end{flushleft}
+			\end{minipage}~
+			\begin{minipage}[t]{0.4\textwidth}
+			\begin{flushright} \large
+			\emph{Enseignant :} \\
+			Sébastion Thon
+		\end{flushright}
+	\end{minipage}\\[2 cm]
+
+	\vfill
+
+\end{titlepage}
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+	\subsection{Présentation du projet}
+
+\section{Analyse}
+	\subsection{Classes utilisées}
+	Faire un diagramme et changer le titre en "Diagramme de classe"
+
+	\subsection{Relations entre les classes}
+	Cf diagramme au dessus.
+
+	\subsection{Fonctionnement global}
+	Si on a la foi, faire un diagramme de séquence. Sinon, expliquer comment ça fonctionne.
+
+\section{Réalisation}
+	\subsection{Choix techniques}
+	Nous avons choisi d'utiliser Swing (\todo{Ajouter ref.}), bibliothèque graphique présente dans les JFC (\todo{Ref. \url{https://en.wikipedia.org/wiki/Java_Foundation_Classes}}) car elle est plus performante que AWT (\todo{Idem, ref.}). De plus, elle est équipée d'une interface ChangeListener (\todo{Ref. \url{https://docs.oracle.com/javase/8/docs/api/index.html?javax/swing/event/ChangeListener.html}}) qui permet de gérer le survol d'un élément graphique en toute simplicité, comme n'importe quel autre événement utilisateur.
+
+	Nous avons fait hériter nos classes de celles de Swing afin de les personnaliser. Ainsi nous avons pu modifier le comportement et l'apparence des widgets utilisés, comme les pions, par exemple, qui sont dessinés procéduralement et non stockés sous forme d'image.
+
+	Utilisation de swing pour les widgets
+	$\newline\hookrightarrow$
+	Création de classes enfants afin de les personnaliser
+
+	Surcharge de la méthode \texttt{Component::paintComponent()}
+
+	\subsection{Algorithmes "complexes" utilisés}
+	Explication de la méthode \texttt{Board::checkMove()}.
+
+\section{Utilisation}
+	\subsection{mode d'emploi}
+	Tu lances, tu joues.
+	\subsection{configuration requise}
+	Lol
+
+\section{Conclusion}
+	\subsection{Bilan}
+
+
+	\subsection{Optimisations possibles}
+	On peut trouver une implémentation plus propre pour le survol des pions.
+
+	\subsection{Extensions possibles}
+	Améliorer la création et l'accès aux/de parties en ligne (un pool de parties en cours/en attente d'adversaire, un mode observateur, un classement en ligne)
+
+\newpage
+\bibliographystyle{unsrt}
+\bibliography{biblio}
+
+\end{document}

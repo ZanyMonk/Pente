@@ -3,3 +3,8 @@ bin/*
 /nbproject/private/
 /build/
 /dist/
+/doc/*
+!/doc/*.tex
+!/doc/*.pdf
+!/doc/*.bib
+!/doc/*.png
