@@ -27,6 +27,7 @@ public class Board extends JPanel {
 	private int			headerSize = 25;
 	private int			playerColor = 0;
 	private int			currentPlayer = 0; // White begins
+	private int[]		eatenPawns = new int[2];
 	private boolean		playing = false;
 	private JPanel		status = new JPanel();
 	private MainWindow	parent = null;
@@ -71,6 +72,7 @@ public class Board extends JPanel {
 		this.repaint();
 		((JLabel)this.status.getComponents()[0]).setText(
 			"<html>"
+				+"<font style='font-weight:100;' color='white'>White " + this.eatenPawns[0] + " | Black " + this.eatenPawns[1] + " - </font>"
 				+"<font style='font-weight:100;' color='"+color+"'>"+text+"</font>"
 			+"</html>"
 		);
@@ -87,6 +89,10 @@ public class Board extends JPanel {
 
 	private void initBoard() {
 		removeAll();
+		
+		this.eatenPawns[0] = 0;
+		this.eatenPawns[1] = 0;
+		
 		this.status = new JPanel(new BorderLayout());
 		this.status.add(new JLabel(""));
 		this.status.setBounds(5, 613, 623, 20);
@@ -114,10 +120,14 @@ public class Board extends JPanel {
 		this.playing = false;
 		
 		if(this.isPlayingOnline()) {
-			this.server.sendWin(this.playerColor);
+			if(this.server != null) {
+				this.server.sendWin(this.playerColor);
+			} else {
+				this.client.sendWin(this.playerColor);
+			}
 		}
 		
-		if(this.win(this.playerColor)) {
+		if(this.win(this.currentPlayer)) {
 			this.nextTurn();
 			this.newGame();
 			this.nextTurn();
@@ -192,10 +202,12 @@ public class Board extends JPanel {
 		int v = 0, h = 1;
 		
 		for(int i = 0; i < 4; i++) { // Test N, NE, E, SE
-			if(!(v == 1 && h == 1)) {
+			if(!(v == 1 && h == 1)) {	// Exclude null speed
 				int n = 5;
 				int x, y;
 				int winCount = 1;
+				int eatCount = 0;
+				boolean sourcePassed = false;
 				
 				// We go to the farthest accessible intersection from the source toward a direction between N and SE
 				// clockwise.
@@ -206,34 +218,55 @@ public class Board extends JPanel {
 					x = source.iX + (h - 1) * n;
 					y = source.iY + (v - 1) * n;
 					
-					if(x > 18 || y > 18) {	// Intersection is not accessible
+					// Is intersection out of the board ?
+					if(x > 18 || 0 > x || y > 18 || 0 > y)
 						continue;
-					}
-					if(x < 0) {		// Intersection is out of the board
-						break;
-					}
+					
 					// Intersection is valid
 					Cell cell = this.getCellAt(x, y);
-					if(cell.isPlayed() && cell.getState() == player) { // Pawn is ours
+					
+					if(cell == source || cell.getColor() == player) { // Pawn is ours
+						// Check fourth pawn of eat move
+						if(
+							sourcePassed && eatCount == 3 ||
+							cell != source && !sourcePassed && eatCount == 0 ||
+							cell == source && (eatCount == 3 || eatCount == 0)
+						) {
+							eatCount++;
+						} else {
+							eatCount = 0;
+						}
 						winCount++;
 					} else {
-						winCount = 1;
+						// Check second and third pawns of eat move
+						if(cell.isPlayed() && (eatCount == 1 || eatCount == 2))
+							eatCount++;
+						else
+							eatCount = 0;
+						winCount = 0;
 					}
 
-					// DEV__Check if two enemy pawns are surrounded by two of our ones
+					// Check if two enemy pawns are surrounded by two of our ones
+					if(eatCount >= 4) {
+						res[i] = (sourcePassed ? 1 : 2);
+					}
 
 					if(winCount >= 5) {	// Yeah ... you win !
 						res[i] = 0;
 					}
+					
+					if(cell == source)
+						sourcePassed = true;
 				}
 			}
 
-			if(i % 3 == 0) { // Rotate N > NE > E > SE
+			// Rotate N > NE > E > SE
+			if(i % 3 == 0)
 				h = (h + 1) % 3;
-			} else {
+			else
 				v = (v + 1) % 3;
-			}
 		}
+		
 		
 		return res;
 	}
@@ -250,12 +283,42 @@ public class Board extends JPanel {
 		if(this.countPlayedCells() == 1 && (Math.abs(cell.iX-9) > 3 || Math.abs(cell.iY-9) > 3)) {
 			return false;
 		}
-		int[] r = this.checkAlignement(cell, this.currentPlayer);
+		if(played) {
+			int[] r = this.checkAlignement(cell, this.currentPlayer);
 		
-		for(int i = r.length - 1; i >= 0; i--) {
-			if(r[i] == 0 && this.currentPlayer == this.playerColor) {
-				if(played) {
+			for(int i = r.length - 1; i >= 0; i--) {
+				if(r[i] == 0) {
 					this.win();
+				} else if(r[i] == 1 || r[i] == 2) {
+					int xWay = 0, yWay = 0;
+					switch(i){
+						case 0:	// North
+							xWay = 0;
+							yWay = r[i] == 1 ? 1 : -1;
+							break;
+						case 1:	// North-East
+							xWay = r[i] == 1 ? -1 : 1;
+							yWay = r[i] == 1 ? 1 : -1;
+							break;
+						case 2:	// East
+							xWay = r[i] == 1 ? -1 : 1;
+							yWay = 0;
+							break;
+						case 3:	// South-East
+							xWay = r[i] == 1 ? -1 : 1;
+							yWay = r[i] == 1 ? -1 : 1;
+							break;
+						default:	// Error ?
+							break;
+					}
+					this.getCellAt(cell.iX+1*xWay, cell.iY+1*yWay).eat();
+					this.getCellAt(cell.iX+2*xWay, cell.iY+2*yWay).eat();
+					this.eatenPawns[this.currentPlayer] += 2;
+					
+					int n = this.eatenPawns[this.currentPlayer];
+					if(n >= 10) {
+						this.win();
+					}
 				}
 			}
 		}
@@ -378,6 +441,9 @@ public class Board extends JPanel {
 						return this.playOpponentMove(x, y);
 					}
 					break;
+				case "WIN":
+					this.win(data == "WHITE" ? 0 : 1);
+					break;
 			}
 		}
 		return true;
@@ -386,9 +452,9 @@ public class Board extends JPanel {
 	public boolean playOpponentMove(int x, int y) {
 		Cell cell = this.getCellAt(x, y);
 		if(this.checkMove(cell)) {
-			System.out.println("("+x+","+y+")");
 			cell.setColor((this.playerColor+1)%2);
 			cell.play();
+			this.checkMove(cell);
 			this.nextTurn();
 			this.repaint();
 			return true;

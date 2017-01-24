@@ -74,11 +74,14 @@ public final class Client extends Thread {
 	
 	public void sendQuit() {
 		this.sendMsg("QUIT:"+this.name);
-		System.out.println("ok");
 	}
 	
 	public void sendMove(Cell cell) {
 		this.sendMsg("MOVE:"+cell.iX+","+cell.iY);
+	}
+	
+	public void sendWin(int color) {
+		this.sendMsg("WIN:"+(color == 0 ? "WHITE" : "BLACK"));
 	}
 	
 	public void closeSocket() {
@@ -136,6 +139,7 @@ public final class Client extends Thread {
 					break;
 				case "WIN":
 					this.board.win(data == "WHITE" ? 0 : 1);
+					break;
 			}
 		}
 		

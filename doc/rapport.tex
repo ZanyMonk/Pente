@@ -1,13 +1,15 @@
 \documentclass[12pt]{article}
 \usepackage{natbib}
 \usepackage{url}
+\usepackage{color}
 \usepackage{hyperref}
+\definecolor{link}{RGB}{100,200,20}
 \hypersetup{
     colorlinks,
     citecolor=black,
     filecolor=black,
     linkcolor=black,
-    urlcolor=black,
+    urlcolor=link,
 	linktoc=all,
 	bookmarksdepth=paragraph
 }
@@ -18,6 +20,7 @@
 \usepackage{graphicx}
 \usepackage{parskip}
 \usepackage{fancyhdr}
+\usepackage{listings}
 
 \newcommand\todo[1]{\textcolor{red}{#1}}
 
@@ -28,6 +31,25 @@
 \let\theauthor\@author
 \let\thetitle\@title
 \makeatother
+
+\lstset{
+	language=Java,
+	basicstyle=\ttfamily\footnotesize, %
+	identifierstyle=\color{red}, %
+	keywordstyle=\bfseries\color{blue}, %
+	stringstyle=\color{black!60}, %
+	commentstyle=\color{green!95!yellow!1}, %
+	columns=flexible, %
+	tabsize=2, %
+	extendedchars=true, %
+	showspaces=false, %
+	showstringspaces=false, %
+	numbers=left, %
+	numberstyle=\tiny, %
+	breaklines=true, %
+	breakautoindent=true, %
+	captionpos=b
+}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -65,44 +87,153 @@
 \pagebreak
 
 \section{Introduction}
+Ce projet a été développé en Java dans le cadre du module M3105 de notre DUT Informatique.
+
 	\subsection{Présentation du projet}
+Il s'est agit de développer un programme permettant de jouer une partie de jeu de Pente\cite{Pente} à deux joueurs sur une même machine, jouant à tour de rôle à la souris.
+
+Le plateau du jeu de Pente, le \textit{goban}, ainsi que la manière d'y poser ses pions sont les mêmes qu'au jeu de Go\cite{Go} (ou \textit{wéiqí} en chinois). Le Pente est en fait une version très simplifiée du Go dans laquelle il suffit d'aligner cinq pions de sa couleur ou de manger dix pions adverses pour gagner la partie, contrairement au Go qui laisse aux joueurs le soin de se mettre d'accord pour mettre fin à la partie.
 
 \section{Analyse}
-	\subsection{Classes utilisées}
-	Faire un diagramme et changer le titre en "Diagramme de classe"
+	Le programme se compose deux classes qui héritent de widgets Swing.
+\begin{itemize}
+	\item \texttt{Board}, qui hérite de \texttt{JPanel}
+	\item \texttt{Cell}, qui hérite de \texttt{JButton}
+\end{itemize}
 
-	\subsection{Relations entre les classes}
-	Cf diagramme au dessus.
+La \texttt{Board} contient 361 \texttt{Cell} qui représentent les pions.
 
-	\subsection{Fonctionnement global}
-	Si on a la foi, faire un diagramme de séquence. Sinon, expliquer comment ça fonctionne.
+C'est cette \texttt{Board} qui applique les règles du jeu (victoire, capture de pions).
+
+À chacun des pions sont liés des événements sous la forme de surcharges de méthodes, afin de gérer le clique et le déplacement du curseur sur ces pions. Ces événements appellent les méthodes de \texttt{Board} afin de valider le coup et agissent en conséquence : le pion est joué, le pion reste grisé, le pion n'est pas affiché ...
 
 \section{Réalisation}
 	\subsection{Choix techniques}
-	Nous avons choisi d'utiliser Swing (\todo{Ajouter ref.}), bibliothèque graphique présente dans les JFC (\todo{Ref. \url{https://en.wikipedia.org/wiki/Java_Foundation_Classes}}) car elle est plus performante que AWT (\todo{Idem, ref.}). De plus, elle est équipée d'une interface ChangeListener (\todo{Ref. \url{https://docs.oracle.com/javase/8/docs/api/index.html?javax/swing/event/ChangeListener.html}}) qui permet de gérer le survol d'un élément graphique en toute simplicité, comme n'importe quel autre événement utilisateur.
+	Nous avons choisi d'utiliser Swing\cite{Swing}, bibliothèque graphique présente dans les JFC\cite{JFC} car elle est plus performante que AWT \cite{AWT}. De plus, elle est équipée d'une interface ChangeListener\cite{ChangeListener} qui permet de gérer le survol d'un élément graphique en toute simplicité, comme n'importe quel autre événement utilisateur.
 
-	Nous avons fait hériter nos classes de celles de Swing afin de les personnaliser. Ainsi nous avons pu modifier le comportement et l'apparence des widgets utilisés, comme les pions, par exemple, qui sont dessinés procéduralement et non stockés sous forme d'image.
+	Les classes du programme héritent de celles de Swing, ce qui permet leur personnalisation. Ainsi le comportement et l'apparence des widgets utilisés ont été modifiés, comme les pions, par exemple, qui sont dessinés procéduralement et non stockés sous forme d'image.
+	Pour ce faire, la méthode \texttt{Component::paintComponent()} a été surchargée.
 
-	Utilisation de swing pour les widgets
-	$\newline\hookrightarrow$
-	Création de classes enfants afin de les personnaliser
+	\subsection{Vérification des alignements de pions}
+	L'algorithme de recherche d'alignement de pions nous a demandé un effort tout particulier.
+	\begin{lstlisting}
+public int[] checkAlignement(Cell source, int player) {
+	/*
+	On renvoie un tableau de quatre valeurs qui correspondent à quatre directions (Nord>Sud, Nord-Est>Sud-Ouest, Est>Ouest, Sud-Est>Nord-Ouest).
 
-	Surcharge de la méthode \texttt{Component::paintComponent()}
+	Les valeurs de ce tableau indiquent pour
+	-1		Rien
+	0		Alignement de cinq pions
+	1		Alignement de capture
+	2		Alignement de capture (sens inverse)
+	*/
+	int[] res = { -1, -1, -1, -1 };
 
-	\subsection{Algorithmes "complexes" utilisés}
-	Explication de la méthode \texttt{Board::checkMove()}.
+	int v = 0, h = 1;
+
+	/*
+	On boucle sur les quatres directions choisies (cf. commentaire au bas de ce code)
+	*/
+	for(int i = 0; i < 4; i++) {
+		if(!(v == 1 && h == 1)) {
+			int n = 5;
+			int x, y;
+			int winCount = 1;
+			int eatCount = 0;
+			boolean sourcePassed = false;
+
+			/*
+			On va du point le plus eloigne en aval (n=5)
+			jusqu'au point le plus eloigne en amont (n=-5)
+			*/
+			while(n > -4) {
+				n--;
+
+				/*
+				On calcule notre position en fonction de nos indicateurs de direction
+				*/
+				x = source.iX + (h - 1) * n;
+				y = source.iY + (v - 1) * n;
+
+				// On ne s'attarde pas hors du plateau
+				if(x > 18 || 0 > x || y > 18 || 0 > y)
+					continue;
+
+				// On selectionne le pion a verifier
+				Cell cell = this.getCellAt(x, y);
+
+				/*
+				On teste si le pion appartient au joueur qui vient de jouer
+				*/
+				if(cell == source || cell.getColor() == player) { // Pawn is ours
+					/*
+					On teste si le pion correspond au premier
+					ou au dernier pion d'un alignement de capture
+					*/
+					if(
+						sourcePassed && eatCount == 3 ||
+						cell != source && !sourcePassed && eatCount == 0 ||
+						cell == source && (eatCount == 3 || eatCount == 0)
+					) {
+						eatCount++;
+					} else {
+						eatCount = 0;
+					}
+					winCount++;
+				} else {
+					/*
+					On teste si le pion correspond au second ou au troisieme pion d'un
+					alignement de capture
+					*/
+					if(cell.isPlayed() && (eatCount == 1 || eatCount == 2))
+						eatCount++;
+					else
+						eatCount = 0;
+					winCount = 0;
+				}
+
+				/*
+				On remplit le tableau de retour avec le resultat de la recherche pour la direction i
+				*/
+				if(eatCount >= 4) {
+					// On renvoie le sens de l'alignement par rapport au pion joue
+					res[i] = (sourcePassed ? 1 : 2);
+				}
+
+				if(winCount >= 5) {	// Bravo ! Victoire !
+					res[i] = 0;
+				}
+
+				if(cell == source)
+					sourcePassed = true;
+			}
+		}
+
+		/*
+		On change de direction :
+		initialement (i=0) la direction correspond à un trajet Nord > Sud
+		Lorsque l'on change de direction, dans le sens des aiguilles d'une montre, on se retrouve en Nord-Est > Sud-Ouest, puis en Est > Ouest, et enfin en Sud-Est > Nord-Ouest.
+		Nul besoin de verifier l'hemicycle oppose car nous prenons deja soin de verifier
+		4 pions de chaque cote du pion joue.
+		*/
+		if(i % 3 == 0)
+			h = (h + 1) % 3;
+		else
+			v = (v + 1) % 3;
+	}
+
+	return res;
+}
+	\end{lstlisting}
 
 \section{Utilisation}
-	\subsection{mode d'emploi}
-	Tu lances, tu joues.
-	\subsection{configuration requise}
-	Lol
+Le programme étant distribué sous forme d'une archive JAR exécutable aucune installation n'est nécessaire. Sous un système GNU/Linux vous pouvez lancer la commande
+\texttt{java -jar Pente.jar}
 
 \section{Conclusion}
-	\subsection{Bilan}
-
-
 	\subsection{Optimisations possibles}
+	La gestion des parties par le réseau n'a pas pu être fini à cause de difficultés dans la manipulation des sockets. Elle peut être viabilisée.
+
 	On peut trouver une implémentation plus propre pour le survol des pions.
 
 	\subsection{Extensions possibles}

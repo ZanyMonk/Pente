@@ -106,6 +106,10 @@ public class Cell extends JButton {
 		this.played = true;
 	}
 	
+	public void eat() {
+		this.played = false;
+	}
+	
 	public int getColor() { // -1 = not played, 0 = white, 1 = black
 		return !this.isPlayed() ? -1 : this.state;
 	}

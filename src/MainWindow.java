@@ -19,7 +19,8 @@ public class MainWindow extends JFrame {
 	MainWindow() {
 		super("Pente");
 
-		setSize(new Dimension(633, 687));
+//		setSize(new Dimension(633, 687));
+		setSize(new Dimension(800, 800));
 		setResizable(false);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
