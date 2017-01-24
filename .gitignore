@@ -1,2 +1,13 @@
 .settings/
 bin/*
+build
+nbproject
+*.jar
+*.launch
+.project
+.classpath
+doc/*
+!doc/*.bib
+!doc/*.pdf
+!doc/*.png
+!doc/*.tex
