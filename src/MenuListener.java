@@ -1,15 +1,12 @@
 import java.awt.event.ActionListener;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import java.awt.event.ItemEvent;
-
-public class MenuListener implements ActionListener, ItemListener {
+public class MenuListener implements ActionListener {
 	Board	board;
 	
 	MenuListener(Board board) {
@@ -20,7 +17,9 @@ public class MenuListener implements ActionListener, ItemListener {
 		Window frame = JFrame.getWindows()[0];
 		switch(e.getActionCommand()) {
 			case "Quit":
-				frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				if(this.board.confirmNoSave()) {
+					frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				}
 				break;
 			case "About":
 				JOptionPane.showMessageDialog(
@@ -33,10 +32,38 @@ public class MenuListener implements ActionListener, ItemListener {
 			case "New":
 				this.board.newGame();
 				break;
+			case "Join":
+				if(!this.board.isPlayingOnline() || this.board.confirmNoSave()) {
+					this.board.shutdownServer();
+					JoinForm form = new JoinForm(this.board);
+					form.showWindow();
+				}
+				break;
+			case "Host":
+				String port = null;
+				boolean err = false;
+				
+				while(port == null || err) {
+					port = (String)JOptionPane.showInputDialog(
+						frame,
+						"Port",
+						"Host settings",
+						JOptionPane.INFORMATION_MESSAGE,
+						null,
+						null,
+						"1337"
+					);
+					
+					System.out.println(port);
+					
+					err = !this.board.host(port);
+					if(port == null) {
+						break;
+					}
+				}
+				break;
+			default:
+				break;
 		}
-	}
-	
-	public void itemStateChanged(ItemEvent e) {
-		
 	}
 }
